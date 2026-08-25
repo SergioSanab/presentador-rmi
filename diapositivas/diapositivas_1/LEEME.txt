@@ -1,0 +1,14 @@
+Ponga aqui las imagenes de esta presentacion (.png .jpg .jpeg .gif .bmp).
+
+Se ordenan por nombre de archivo con orden natural, asi que "2.png" va antes
+que "10.png". De todas formas, lo mas comodo es numerarlas asi:
+
+    01-portada.png
+    02-agenda.png
+    03-desarrollo.png
+    ...
+
+Este archivo LEEME.txt se ignora: solo se leen las imagenes.
+
+Para crear otra presentacion, cree otra carpeta al lado de esta. No hace falta
+reiniciar el servidor: basta con pulsar "Actualizar" en cualquier cliente.
