@@ -18,12 +18,12 @@ $db->exec(
     )'
 );
 
-/*
- * Crear registros de prueba si la tabla está vacía.
- */
-$countResult = $db->querySingle('SELECT COUNT(*) FROM users');
+$countResult = $db->querySingle(
+    'SELECT COUNT(*) FROM users'
+);
 
 if ((int)$countResult === 0) {
+
     $db->exec(
         "INSERT INTO users (username, email, role) VALUES
         ('ana', 'ana@lab.local', 'user'),
@@ -40,31 +40,41 @@ if (isset($_GET['q'])) {
     $q = $_GET['q'];
 
     /*
-     * ==========================================================
-     * VULNERABILIDAD SQL INJECTION
-     * ==========================================================
+     * CONSULTA PARAMETRIZADA
      *
-     * El parámetro "q" proviene directamente de la petición HTTP.
-     * Posteriormente se concatena directamente dentro de la
-     * consulta SQL.
-     *
-     * NO HACER ESTO EN UNA APLICACIÓN REAL.
+     * El parámetro q ya no se concatena
+     * directamente dentro de la consulta.
      */
 
-    $sql = "SELECT id, username, email, role
-            FROM users
-            WHERE username LIKE '%$q%'
-               OR email LIKE '%$q%'
-               OR role LIKE '%$q%'";
+    $stmt = $db->prepare(
+        "SELECT id, username, email, role
+         FROM users
+         WHERE username LIKE :q
+            OR email LIKE :q
+            OR role LIKE :q"
+    );
 
-    $queryResult = $db->query($sql);
-
-    if ($queryResult === false) {
-        $error = 'Error SQL: ' . $db->lastErrorMsg();
+    if ($stmt === false) {
+        $error = 'No fue posible preparar la consulta.';
     } else {
 
-        while ($row = $queryResult->fetchArray(SQLITE3_ASSOC)) {
-            $results[] = $row;
+        $stmt->bindValue(
+            ':q',
+            '%' . $q . '%',
+            SQLITE3_TEXT
+        );
+
+        $queryResult = $stmt->execute();
+
+        if ($queryResult === false) {
+
+            $error = 'No fue posible ejecutar la consulta.';
+
+        } else {
+
+            while ($row = $queryResult->fetchArray(SQLITE3_ASSOC)) {
+                $results[] = $row;
+            }
         }
     }
 }
@@ -72,11 +82,18 @@ if (isset($_GET['q'])) {
 
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
+
     <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
     <title>SQL Injection Lab</title>
 
     <style>
+
         body {
             font-family: Arial, sans-serif;
             max-width: 900px;
@@ -110,7 +127,8 @@ if (isset($_GET['q'])) {
             margin-top: 25px;
         }
 
-        th, td {
+        th,
+        td {
             border: 1px solid #ccc;
             padding: 10px;
             text-align: left;
@@ -131,7 +149,9 @@ if (isset($_GET['q'])) {
             padding: 15px;
             margin-bottom: 20px;
         }
+
     </style>
+
 </head>
 
 <body>
@@ -141,8 +161,10 @@ if (isset($_GET['q'])) {
     <h1>SQL Injection Laboratory</h1>
 
     <div class="info">
-        Aplicación web creada exclusivamente para prácticas
-        controladas de seguridad informática.
+
+        Aplicación web utilizada para
+        prácticas controladas de seguridad.
+
     </div>
 
     <h2>Buscar usuarios</h2>
@@ -169,12 +191,15 @@ if (isset($_GET['q'])) {
     <?php if ($error !== ''): ?>
 
         <div class="error">
+
             <strong>Error:</strong>
+
             <?= htmlspecialchars(
                 $error,
                 ENT_QUOTES,
                 'UTF-8'
             ) ?>
+
         </div>
 
     <?php endif; ?>
@@ -245,4 +270,6 @@ if (isset($_GET['q'])) {
 </div>
 
 </body>
+
 </html>
+
